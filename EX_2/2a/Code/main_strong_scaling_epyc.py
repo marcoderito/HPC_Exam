@@ -4,7 +4,6 @@ from bcast_tree import binary_tree_broadcast
 from bcast_flat import flat_tree_broadcast
 from bcast_chain import chain_broadcast
 import csv
-import time
 
 comm = MPI.COMM_WORLD
 my_rank = comm.Get_rank()
@@ -32,21 +31,22 @@ def strong_scaling():
         chain_broadcast(np.zeros(initial_data_size), my_rank, num_procs, root_rank, 1)
         flat_tree_broadcast(np.zeros(initial_data_size), my_rank, num_procs, root_rank, 1)
 
+    # Misurazione dei tempi di esecuzione
     results = {}
+    start_time = MPI.Wtime()
     for num_procs in range(1, num_procs + 1):
         input_size = initial_data_size // num_procs  # Regola la dimensione dei dati per processo
         avg_time = 0
         for _ in range(NUM_RUNS):
-            start_time = time.time()  # Misura il tempo di inizio all'interno del ciclo
-            # Esegue il benchmark utilizzando la funzione di broadcast specifica
-            # (binary_tree_broadcast, chain_broadcast, flat_tree_broadcast)
-            end_time = time.time()
-            avg_time += (end_time - start_time) / NUM_RUNS
+            binary_tree_broadcast(np.zeros(input_size), my_rank, num_procs, root_rank, 1)
+            chain_broadcast(np.zeros(input_size), my_rank, num_procs, root_rank, 1)
+            flat_tree_broadcast(np.zeros(input_size), my_rank, num_procs, root_rank, 1)
+        end_time = MPI.Wtime()
+        avg_time += (end_time - start_time) / NUM_RUNS
         results[num_procs] = avg_time
 
-
     # Scrittura dei risultati su file CSV
-    filename = "strong_scaling_results.csv"
+    filename = "strong_scaling_results_epyc.csv"
     measure_and_write_results(filename, results)
 
 
